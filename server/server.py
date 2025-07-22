@@ -1,4 +1,4 @@
-# This file contains code to run the [Client]
+# This file contains code to run the [Server]
 import sys
 
 
