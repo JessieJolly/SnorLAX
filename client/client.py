@@ -19,6 +19,8 @@ class SSHClient:
         try:
             while True:
                 command = input("$ ").strip()
+                if command == "":
+                    continue
                 if command.lower() == "exit":
                     break
                 Protocol.send_message(sock, "COMMAND", {'command':command})
@@ -36,20 +38,11 @@ class SSHClient:
     
     
 def main():
-    if(len(sys.argv)) < 2:
-        print("Usage: python client.py <command> <username>")
-        print("Commands:")
-        print("1. start -> Starts a session with server")
-    else:
-        command = sys.argv[1]
-        client = SSHClient()
-        if command == "start":
-            print("---Starting session with server---")
-            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            sock.connect((client.host, client.port))
-            client.start_session(sock)
-        else:
-            print("---Invalid command---")
+    client = SSHClient()
+    print("---Starting session with server---")
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    sock.connect((client.host, client.port))
+    client.start_session(sock)
     
 if __name__ == "__main__":
     main()

@@ -17,16 +17,19 @@ class SSHServer:
         try:
             server_socket.bind((self.host, self.port))
             server_socket.listen(5)
+            server_socket.settimeout(1.0)
             print(f"Server listening on {self.host}:{self.port}")
 
             while True:
-                client_socket, address = server_socket.accept()
-                client_thread = threading.Thread(
-                    args=(client_socket, address)
-                )
-                client_thread.daemon = True
-                client_thread.start()
-
+                try: 
+                    client_socket, address = server_socket.accept()
+                    client_thread = threading.Thread(
+                        args=(client_socket, address)
+                    )
+                    client_thread.daemon = True
+                    client_thread.start()
+                except socket.timeout:
+                    continue
         except KeyboardInterrupt:
             print("Server shutting down---")
         finally:
