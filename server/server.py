@@ -2,6 +2,9 @@
 import socket
 import sys
 import threading
+from pathlib import Path
+# Adding the parent directory to the path so the common package is found
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from common.protocol import Protocol
 
