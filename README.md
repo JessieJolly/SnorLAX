@@ -1,0 +1,95 @@
+# SnorLAX
+
+A lightweight Python client–server application that provides an SSH-like remote command session over TCP. The client connects to the server, sends commands interactively, and prints the server’s responses.
+
+## Project structure
+
+```
+SnorLAX/
+├── client/
+│   └── client.py      # Interactive client session
+├── server/
+│   └── server.py      # Multi-threaded TCP server
+├── common/
+│   └── protocol.py    # Shared message framing and serialization
+└── requirements.txt
+```
+
+## Requirements
+
+- Python 3.8+
+- Dependencies listed in `requirements.txt`
+
+## Setup
+
+Create and activate a virtual environment (recommended):
+
+```bash
+python -m venv venv
+source venv/bin/activate   # macOS/Linux
+# venv\Scripts\activate    # Windows
+```
+
+Install dependencies:
+
+```bash
+pip install -r requirements.txt
+```
+
+Run commands from the project root so the `common` package resolves correctly.
+
+## Usage
+
+### Start the server
+
+```bash
+python server/server.py
+```
+
+The server listens on `localhost:2222` by default.
+
+### Start the client
+
+In a separate terminal:
+
+```bash
+python client/client.py
+```
+
+You will see a `$` prompt. Type commands and press Enter; the server’s output is printed below. Type `exit` or press Ctrl+C to end the session.
+
+### Example session
+
+```
+---Starting session with server---
+---Started session with Server---
+---Type 'exit' to quit session---
+$ hi
+hi
+$ hello
+not hi
+$ exit
+```
+
+## Protocol
+
+Client and server communicate using length-prefixed JSON messages defined in `common/protocol.py`.
+
+Each message is sent as:
+
+1. A 4-byte big-endian unsigned integer (message length)
+2. A UTF-8 JSON payload: `{"type": "<MESSAGE_TYPE>", "data": {...}}`
+
+| Message type     | Direction        | Purpose                          |
+|------------------|------------------|----------------------------------|
+| `COMMAND`        | Client → Server  | Carries a shell-style command    |
+| `COMMAND_RESULT` | Server → Client  | Carries command output           |
+| `ERROR`          | Server → Client  | Carries an error description     |
+
+## Configuration
+
+Both client and server accept optional `host` and `port` arguments via their constructors (`SSHClient`, `SSHServer`). Defaults are `localhost` and `2222`.
+
+## License
+
+No license file is included yet. Add one if you plan to distribute this project.

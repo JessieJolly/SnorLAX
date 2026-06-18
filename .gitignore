@@ -16,3 +16,6 @@ secrets.json
 
 # Ignore log files
 *.log
+
+# Ignore cursor rules
+.cursorrules
