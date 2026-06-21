@@ -1,17 +1,18 @@
 # SnorLAX
 
-A lightweight Python client–server application that provides an SSH-like remote command session over TCP. The client connects to the server, sends commands interactively, and prints the server’s responses.
+A lightweight Python client-server application that provides an SSH-like remote command session over TCP. The client connects to the server, sends commands interactively, and prints the server's responses. RSA SSH key pair generation is handled entirely on the client side.
 
 ## Project structure
 
 ```
 SnorLAX/
 ├── client/
-│   └── client.py      # Interactive client session
+│   └── client.py      # Interactive client session with built-in key management
 ├── server/
 │   └── server.py      # Multi-threaded TCP server
 ├── common/
-│   └── protocol.py    # Shared message framing and serialization
+│   ├── protocol.py    # Shared message framing and serialization
+│   └── keygen.py      # RSA SSH key pair generation utility
 └── requirements.txt
 ```
 
@@ -56,7 +57,19 @@ In a separate terminal:
 python client/client.py
 ```
 
-You will see a `$` prompt. Type commands and press Enter; the server’s output is printed below. Type `exit` or press Ctrl+C to end the session.
+You will see a `$` prompt. Type commands and press Enter; the server's output is printed below.
+
+### Client-side commands
+
+These commands are handled locally by the client and are never sent to the server.
+
+| Command                   | Description                                                         |
+|---------------------------|---------------------------------------------------------------------|
+| `genkey` / `generate key` | Generate an RSA 2048-bit SSH key pair and save to disk              |
+| `showkey` / `show key`    | Print the currently held private and public key to stdout           |
+| `exit`                    | End the session (Ctrl+C also works)                                 |
+
+Generated keys are written to `id_rsa` (private) and `id_rsa.pub` (public) in the working directory. If a key pair already exists in memory, the client prompts for confirmation before regenerating.
 
 ### Example session
 
@@ -68,6 +81,12 @@ $ hi
 hi
 $ hello
 not hi
+$ genkey
+Success! Keys saved to id_rsa and id_rsa.pub
+$ showkey
+Private key: -----BEGIN OPENSSH PRIVATE KEY-----
+...
+Public key: ssh-rsa AAAAB3NzaC1yc2E...
 $ exit
 ```
 
@@ -82,9 +101,9 @@ Each message is sent as:
 
 | Message type     | Direction        | Purpose                          |
 |------------------|------------------|----------------------------------|
-| `COMMAND`        | Client → Server  | Carries a shell-style command    |
-| `COMMAND_RESULT` | Server → Client  | Carries command output           |
-| `ERROR`          | Server → Client  | Carries an error description     |
+| `COMMAND`        | Client -> Server | Carries a shell-style command    |
+| `COMMAND_RESULT` | Server -> Client | Carries command output           |
+| `ERROR`          | Server -> Client | Carries an error description     |
 
 ## Configuration
 
