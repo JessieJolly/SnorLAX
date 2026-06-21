@@ -19,3 +19,7 @@ secrets.json
 
 # Ignore cursor rules
 .cursorrules
+
+# Ignore key files
+id_rsa
+id_rsa.pub
