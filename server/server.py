@@ -6,7 +6,7 @@ from pathlib import Path
 # Adding the parent directory to the path so the common package is found
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from common.protocol import Protocol
+from common.protocol import Protocol, MSG_COMMAND, MSG_COMMAND_RESULT
 
 
 class SSHServer:
@@ -18,7 +18,7 @@ class SSHServer:
         try:
             while self.running:
                 msg_type, data = Protocol.receive_message(client_socket)
-                if not msg_type or msg_type!="COMMAND":
+                if not msg_type or msg_type != MSG_COMMAND:
                     break
                 command = data['command'].strip()
                 if not command:
@@ -28,9 +28,9 @@ class SSHServer:
                         output = "hi"
                     else:
                         output = "not hi"
-                    Protocol.send_message(client_socket, "COMMAND_RESULT", {'output': output})
+                    Protocol.send_message(client_socket, MSG_COMMAND_RESULT, {"output": output})
                 except Exception as e:
-                    Protocol.send_message(client_socket, "COMMAND_RESULT", {'output': f"Error: {str(e)}"})
+                    Protocol.send_message(client_socket, MSG_COMMAND_RESULT, {"output": f"Error: {str(e)}"})
 
         except Exception as e:
             print(f"System exception on receive: {str(e)}")

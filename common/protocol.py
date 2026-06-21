@@ -1,35 +1,62 @@
-# This file contains code for describing the protocol to communicate with Server and Client
+"""
+Wire protocol for SnorLAX client-server communication.
+
+Framing: each message is prefixed with a 4-byte big-endian unsigned int
+indicating the byte length of the JSON payload that follows.
+"""
 import json
 import socket
 import struct
 
+# Message type identifiers shared between client and server
+MSG_COMMAND = "COMMAND"
+MSG_COMMAND_RESULT = "COMMAND_RESULT"
+MSG_ERROR = "ERROR"
+
+# Encoding used for all JSON payloads on the wire
+ENCODING = "utf-8"
+
+# struct format for the 4-byte big-endian length prefix
+_LENGTH_PREFIX_FMT = "!I"
+_LENGTH_PREFIX_SIZE = struct.calcsize(_LENGTH_PREFIX_FMT)  # always 4
+
 
 class Protocol:
-    """Simple Protocol for communication"""
+    """Framed JSON protocol: [4-byte length][JSON payload]"""
+
     @staticmethod
-    def send_message(sock: socket.socket, message_type, data):
+    def send_message(sock: socket.socket, message_type: str, data: dict):
+        """Serialize and send a typed message over the socket."""
         message = {
-            'type':message_type,
-            'data':data
+            "type": message_type,
+            "data": data,
         }
-        encoded_json_data = json.dumps(message).encode('utf-8')
-        sock.send(struct.pack('!I', len(encoded_json_data)))
-        sock.send(encoded_json_data)
+        payload = json.dumps(message).encode(ENCODING)
+        # Send length prefix then payload as two separate writes to avoid
+        # allocating a combined buffer for potentially large payloads.
+        sock.send(struct.pack(_LENGTH_PREFIX_FMT, len(payload)))
+        sock.send(payload)
 
     @staticmethod
     def receive_message(sock: socket.socket):
-        data_length = sock.recv(4)
-        if not data_length:
-            return None, None
-        
-        length = struct.unpack('!I', data_length)[0]
+        """
+        Block until a complete framed message is received.
 
-        json_data = b''
-        while len(json_data) < length:
-            chunk = sock.recv(length - len(json_data))
+        Returns (message_type, data), or (None, None) if the connection closed.
+        Loops on recv to handle partial reads from the OS TCP buffer.
+        """
+        raw_length = sock.recv(_LENGTH_PREFIX_SIZE)
+        if not raw_length:
+            return None, None
+
+        (length,) = struct.unpack(_LENGTH_PREFIX_FMT, raw_length)
+
+        payload = b""
+        while len(payload) < length:
+            chunk = sock.recv(length - len(payload))
             if not chunk:
                 return None, None
-            json_data += chunk
+            payload += chunk
 
-        message = json.loads(json_data.decode('utf-8'))
+        message = json.loads(payload.decode(ENCODING))
         return message["type"], message["data"]

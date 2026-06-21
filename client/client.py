@@ -6,7 +6,7 @@ from pathlib import Path
 # Adding the parent directory to the path so the common package is found
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from common.protocol import Protocol
+from common.protocol import Protocol, MSG_COMMAND, MSG_COMMAND_RESULT, MSG_ERROR
 
 
 class SSHClient:
@@ -26,11 +26,11 @@ class SSHClient:
                     continue
                 if command.lower() == "exit":
                     break
-                Protocol.send_message(sock, "COMMAND", {'command':command})
+                Protocol.send_message(sock, MSG_COMMAND, {"command": command})
                 message_type, data = Protocol.receive_message(sock)
-                if message_type == "COMMAND_RESULT":
-                    print(data.get('output', ''))
-                elif message_type == "ERROR":
+                if message_type == MSG_COMMAND_RESULT:
+                    print(data.get("output", ""))
+                elif message_type == MSG_ERROR:
                     print(f"Error: {data.get('error', '')}")
                 else:
                     break
