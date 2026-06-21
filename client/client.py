@@ -44,7 +44,11 @@ def main():
     client = SSHClient()
     print("---Starting session with server---")
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    sock.connect((client.host, client.port))
+    try:
+        sock.connect((client.host, client.port))
+    except Exception as e:
+        print(f"Error connecting to server: {e}")
+        return
     client.start_session(sock)
     
 if __name__ == "__main__":
