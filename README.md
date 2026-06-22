@@ -79,8 +79,6 @@ Generated keys are written to `id_rsa` (private) and `id_rsa.pub` (public) in th
 ---Type 'exit' to quit session---
 $ hi
 hi
-$ hello
-not hi
 $ genkey
 Success! Keys saved to id_rsa and id_rsa.pub
 $ showkey
