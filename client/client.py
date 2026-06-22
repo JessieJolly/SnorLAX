@@ -6,7 +6,7 @@ from pathlib import Path
 # Adding the parent directory to the path so the common package is found
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from common.protocol import Protocol, MSG_COMMAND, MSG_COMMAND_RESULT, MSG_ERROR
+from common.protocol import Protocol, MSG_COMMAND, MSG_COMMAND_RESULT, MSG_ERROR, MSG_KEY_REGISTER, MSG_KEY_REGISTER_RESULT
 from common.keygen import KeyGenerator
 
 
@@ -53,6 +53,17 @@ class SSHClient:
                     else:
                         print("No key generated, please generate a key first")
                         continue
+                if command.lower() in ("sendkey", "send key"):
+                    if not self.public_key:
+                        print("No key generated. Run 'genkey' first.")
+                        continue
+                    Protocol.send_message(sock, MSG_KEY_REGISTER, {"public_key": self.public_key.decode()})
+                    msg_type, data = Protocol.receive_message(sock)
+                    if msg_type == MSG_KEY_REGISTER_RESULT and data.get("success"):
+                        print("Public key registered on server.")
+                    else:
+                        print("Failed to register key.")
+                    continue
                 Protocol.send_message(sock, MSG_COMMAND, {"command": command})
                 message_type, data = Protocol.receive_message(sock)
                 if message_type == MSG_COMMAND_RESULT:
